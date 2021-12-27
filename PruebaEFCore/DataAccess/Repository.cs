@@ -6,23 +6,30 @@ namespace PruebaEFCore.DataAccess;
 public abstract class Repository<T> : IRepository<T> where T : class, new()
 {
     private readonly DatabaseDbContext _context;
-    private readonly DbSet<T> _dbSet;
+    private DbSet<T> _dbSet;
+
+    private DbSet<T> DbSet => _dbSet ??= _context.Set<T>();
 
     public Repository(DatabaseDbContext context)
     {
         _context = context;
-        _dbSet = context.Set<T>();
     }
 
-    public IEnumerable<T> GetAll() => _dbSet.ToList();
+    public IEnumerable<T> GetAll()
+    {
+        //OPCION 1
+        //return DbSet.ToList();
+        //OPCION 2
+        return DbSet.AsNoTracking().ToList();
+    }
 
-    public T? GetById(int id) => _dbSet.Find(id);
+    public T? GetById(int id) => DbSet.Find(id);
 
-    public void Add(T data) => _dbSet.Add(data);
+    public void Add(T data) => DbSet.Add(data);
 
     public void Update(T data)
     {
-        _dbSet.Attach(data);
+        DbSet.Attach(data);
         _context.Entry(data).State = EntityState.Modified;
     }
 
